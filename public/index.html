@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Radio Shack</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css" />
+    <!-- Apply saved theme before first paint to avoid flash -->
+    <script>
+      (function () {
+        var saved = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+
+  <body class="bg-white dark:bg-charcoal text-charcoal dark:text-cream font-body antialiased transition-colors duration-200">
+
+    <!-- ── Nav ───────────────────────────────────────────────────────────── -->
+    <nav class="border-b border-[#E0E0E0] dark:border-[#3D3A3B] py-3">
+      <div class="mx-auto max-w-3xl px-4 flex items-center">
+
+        <!-- Left: spacer (keeps branding centred) -->
+        <div class="flex-1"></div>
+
+        <!-- Centre: branding -->
+        <div class="flex items-center gap-2">
+          <span class="font-heading font-bold text-charcoal dark:text-cream text-lg tracking-wide">Radio</span>
+          <img src="/RadioCalicoLogoTM.png" alt="Radio Shack" class="h-8 w-8 object-contain" />
+          <span class="font-heading font-bold text-charcoal dark:text-cream text-lg tracking-wide">Shack</span>
+        </div>
+
+        <!-- Right: theme slider -->
+        <div class="flex-1 flex justify-end">
+          <label class="flex items-center cursor-pointer select-none" aria-label="Toggle dark mode">
+            <div class="relative">
+              <input type="checkbox" id="theme-toggle" class="sr-only peer" />
+              <!-- Track: w-14 (56px), h-7 (28px) -->
+              <div class="w-14 h-7 rounded-full bg-mint dark:bg-forest border-2 border-forest dark:border-mint transition-colors duration-200"></div>
+              <!-- Thumb: w-6 h-6 (24px), travel = 56-24-4 = 28px = translate-x-7 -->
+              <div class="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform duration-200 peer-checked:translate-x-7 flex items-center justify-center leading-none">
+                <span class="dark:hidden text-sm">☀️</span>
+                <span class="hidden dark:inline text-sm">🌙</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Player card ────────────────────────────────────────────────────── -->
+    <main class="mx-auto max-w-3xl px-4 py-8">
+      <div class="flex rounded overflow-hidden border border-[#DDD] dark:border-[#3D3A3B] shadow-sm">
+
+        <!-- Left: album art -->
+        <div class="w-48 sm:w-64 shrink-0 relative bg-mint dark:bg-[#1A3D1E]">
+          <img id="np-cover" alt="" class="absolute inset-0 w-full h-full object-cover" />
+          <span id="np-year" class="hidden absolute top-2 right-2 bg-charcoal/70 text-white text-xs font-heading font-bold px-2 py-0.5 rounded"></span>
+        </div>
+
+        <!-- Right: track info -->
+        <div class="flex-1 min-w-0 p-5 sm:p-7 flex flex-col gap-2 bg-white dark:bg-[#2D292A]">
+
+          <div>
+            <h1 id="np-artist" class="font-heading font-bold text-2xl sm:text-3xl text-charcoal dark:text-cream leading-tight">Live stream</h1>
+            <h2 id="np-title" class="font-heading font-semibold text-lg text-forest dark:text-mint mt-1"></h2>
+          </div>
+
+          <p id="np-album" class="text-sm text-charcoal/70 dark:text-cream/70"></p>
+
+          <div class="text-xs text-charcoal/60 dark:text-cream/60 space-y-0.5">
+            <p id="np-quality-source"></p>
+            <p id="np-quality-stream"></p>
+          </div>
+
+          <!-- Ratings -->
+          <div id="np-ratings" style="display:none" class="items-center gap-3 mt-1">
+            <span class="text-sm text-charcoal/60 dark:text-cream/60">Rate this track</span>
+            <button
+              id="btn-up"
+              aria-label="Thumbs up"
+              data-default="text-xl px-1 cursor-pointer transition-transform hover:scale-125"
+              data-active="text-xl px-1 cursor-default scale-125"
+              data-dimmed="text-xl px-1 opacity-25 cursor-not-allowed"
+              class="text-xl px-1 cursor-pointer transition-transform hover:scale-125"
+            >👍 <span id="count-up" class="text-xs font-body align-top inline-block mt-0.5">0</span></button>
+            <button
+              id="btn-down"
+              aria-label="Thumbs down"
+              data-default="text-xl px-1 cursor-pointer transition-transform hover:scale-125"
+              data-active="text-xl px-1 cursor-default scale-125"
+              data-dimmed="text-xl px-1 opacity-25 cursor-not-allowed"
+              class="text-xl px-1 cursor-pointer transition-transform hover:scale-125"
+            >👎 <span id="count-down" class="text-xs font-body align-top inline-block mt-0.5">0</span></button>
+          </div>
+
+          <audio id="player" controls preload="none" class="w-full mt-2"></audio>
+          <div id="np-status" class="text-xs text-charcoal/40 dark:text-cream/40 -mt-1" role="status" aria-live="polite">Idle</div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ── Previous tracks ───────────────────────────────────────────────── -->
+    <section class="bg-mint dark:bg-forest px-4 py-8">
+      <div class="mx-auto max-w-3xl">
+        <h3 class="font-heading font-semibold text-forest dark:text-mint text-base mb-3">Previous tracks:</h3>
+        <ol id="recent" class="space-y-1.5"></ol>
+      </div>
+    </section>
+
+    <!-- ── Stations ───────────────────────────────────────────────────────── -->
+    <section class="bg-white dark:bg-charcoal px-4 py-10">
+      <div class="mx-auto max-w-3xl space-y-8">
+
+        <div>
+          <h2 class="font-heading font-semibold text-forest dark:text-mint text-2xl mb-4">Stations</h2>
+          <ul id="stations" class="space-y-2 mb-8">
+            <li class="text-charcoal/50 dark:text-cream/50 py-2 text-sm">loading&hellip;</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-heading font-medium text-forest dark:text-mint text-xl mb-4">Add a Station</h3>
+          <form id="add-form" class="grid gap-4 max-w-md">
+            <label class="grid gap-1.5">
+              <span class="font-heading font-semibold text-xs uppercase tracking-wider text-charcoal dark:text-cream">Name</span>
+              <input name="name" required class="brand-input" />
+            </label>
+            <label class="grid gap-1.5">
+              <span class="font-heading font-semibold text-xs uppercase tracking-wider text-charcoal dark:text-cream">Stream URL</span>
+              <input name="stream_url" type="url" required class="brand-input" />
+            </label>
+            <label class="grid gap-1.5">
+              <span class="font-heading font-semibold text-xs uppercase tracking-wider text-charcoal dark:text-cream">Genre</span>
+              <input name="genre" class="brand-input" />
+            </label>
+            <!-- Primary button: Forest Green bg → Teal on hover (spec) -->
+            <button type="submit" class="justify-self-start font-heading font-semibold text-sm uppercase tracking-wider rounded px-6 py-3 bg-forest text-white hover:bg-teal transition-colors">
+              Add Station
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+    <footer class="bg-cream dark:bg-[#1A1718] py-6 px-4">
+      <div class="mx-auto max-w-3xl flex items-center gap-3">
+        <img src="/RadioCalicoLogoTM.png" alt="" class="h-7 w-7 object-contain" />
+        <p class="text-forest dark:text-mint text-sm">&copy; 2026 Radio Shack &middot; Ad-free &middot; Lossless.</p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script src="/player.js"></script>
+    <script src="/metadata.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      (function () {
+        var toggle = document.getElementById('theme-toggle');
+        toggle.checked = document.documentElement.classList.contains('dark');
+        toggle.addEventListener('change', function () {
+          document.documentElement.classList.toggle('dark', toggle.checked);
+          localStorage.setItem('theme', toggle.checked ? 'dark' : 'light');
+        });
+      })();
+    </script>
+  </body>
+</html>

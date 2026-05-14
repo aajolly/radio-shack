@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Class-based dark mode: applies dark: variants when .dark is on any ancestor */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand colours */
+  --color-mint:     #D8F2D5;
+  --color-forest:   #1F4E23;
+  --color-teal:     #38A29D;
+  --color-orange:   #EFA63C;
+  --color-charcoal: #231F20;
+  --color-cream:    #F5EADA;
+
+  /* Brand fonts */
+  --font-heading: "Montserrat", "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "Open Sans", "Montserrat", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer components {
+  /* Spec: border 1px #CCC, radius 4px, focus teal border + glow */
+  .brand-input {
+    width: 100%;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    color: var(--color-charcoal);
+    outline: none;
+
+    &:focus {
+      border-color: var(--color-teal);
+      box-shadow: 0 0 0 3px rgba(56, 162, 157, 0.3);
+    }
+  }
+
+  /* Dark mode overrides for brand-input */
+  :where(.dark) .brand-input {
+    background: #2D292A;
+    color: var(--color-cream);
+    border-color: #3D3A3B;
+
+    &:focus {
+      border-color: var(--color-teal);
+      box-shadow: 0 0 0 3px rgba(56, 162, 157, 0.3);
+    }
+  }
+}
