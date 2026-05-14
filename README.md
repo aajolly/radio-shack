@@ -2,8 +2,6 @@
 
 An online radio player streaming lossless FLAC audio. Built for local prototyping with Express + SQLite — no bundler, no framework, just vanilla JS.
 
-![Radio Shack screenshot](RadioCalicoLayout.png)
-
 ---
 
 ## Features
