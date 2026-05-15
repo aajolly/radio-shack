@@ -11,6 +11,7 @@
   "scripts": {
     "start": "npm run css:build && node server.js",
     "dev": "concurrently -n css,srv -c cyan,green \"npm:css:watch\" \"nodemon server.js\"",
+    "dev:docker": "concurrently -n css,srv -c cyan,green \"nodemon --watch src --watch public --ext css,html,js --ignore public/style.css --exec npm run css:build\" \"nodemon server.js\"",
     "db:init": "node db/init.js",
     "css:build": "tailwindcss -i src/input.css -o public/style.css --minify",
     "css:watch": "tailwindcss -i src/input.css -o public/style.css --watch",
