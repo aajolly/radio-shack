@@ -1,3 +1,13 @@
+import {
+  applyBtnState,
+  renderRatings as applyRatingsDisplay,
+  resetRatingsUI as clearRatingsDisplay,
+  formatArtist,
+  formatTitle,
+  formatAlbum,
+  formatSourceQuality,
+} from './ratings-ui.js';
+
 const META_URL  = 'https://d3d4yli4hf5bmh.cloudfront.net/metadatav2.json';
 const COVER_URL = 'https://d3d4yli4hf5bmh.cloudfront.net/cover.jpg';
 const POLL_MS   = 20000;
@@ -16,13 +26,12 @@ const btnDown        = document.getElementById('btn-down');
 const countUp        = document.getElementById('count-up');
 const countDown      = document.getElementById('count-down');
 
+// Element bundle passed to the pure rating functions
+const ratingEls = { countUp, countDown, ratingsEl, btnUp, btnDown };
+
 let abort        = null;
 let timer        = null;
 let lastTrackKey = '';
-
-document.addEventListener('streamquality', (e) => {
-  qualStreamEl.textContent = `Stream quality: ${e.detail.label}`;
-});
 
 // ── Cover art ─────────────────────────────────────────────────────────────────
 
@@ -48,38 +57,19 @@ function updateCover(m) {
 
 // ── Ratings ───────────────────────────────────────────────────────────────────
 
-function applyBtnState(btn, state) {
-  btn.className = btn.dataset[state];
-  btn.disabled  = state !== 'default';
+function wireButtons() {
+  btnUp.onclick   = () => submitRating(1);
+  btnDown.onclick = () => submitRating(-1);
 }
 
 function resetRatingsUI() {
-  countUp.textContent   = '0';
-  countDown.textContent = '0';
-  applyBtnState(btnUp,   'default');
-  applyBtnState(btnDown, 'default');
-  btnUp.onclick   = () => submitRating(1);
-  btnDown.onclick = () => submitRating(-1);
+  clearRatingsDisplay(ratingEls);
+  wireButtons();
 }
 
-function renderRatings({ up, down, user_vote }) {
-  countUp.textContent   = up;
-  countDown.textContent = down;
-  ratingsEl.style.display = 'flex';
-
-  btnUp.onclick   = () => submitRating(1);
-  btnDown.onclick = () => submitRating(-1);
-
-  if (user_vote === 1) {
-    applyBtnState(btnUp,   'active');
-    applyBtnState(btnDown, 'default');
-  } else if (user_vote === -1) {
-    applyBtnState(btnUp,   'default');
-    applyBtnState(btnDown, 'active');
-  } else {
-    applyBtnState(btnUp,   'default');
-    applyBtnState(btnDown, 'default');
-  }
+function renderRatings(data) {
+  applyRatingsDisplay(data, ratingEls);
+  wireButtons();
 }
 
 async function fetchRatings() {
@@ -103,14 +93,11 @@ async function submitRating(rating) {
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
 function renderMeta(m) {
-  artistEl.textContent = m.artist ?? 'Live stream';
-  titleEl.textContent  = m.title
-    ? (m.date ? `${m.title} (${m.date})` : m.title)
-    : '';
-  albumEl.textContent = m.album ?? '';
-  qualSrcEl.textContent = m.bit_depth && m.sample_rate
-    ? `Source quality: ${m.bit_depth}-bit ${(m.sample_rate / 1000).toFixed(1)} kHz`
-    : '';
+  artistEl.textContent     = formatArtist(m);
+  titleEl.textContent      = formatTitle(m);
+  albumEl.textContent      = formatAlbum(m);
+  qualSrcEl.textContent    = formatSourceQuality(m);
+  qualStreamEl.textContent = 'Stream quality: FLAC / HiFi Lossless';
 }
 
 // ── Recently played ───────────────────────────────────────────────────────────
