@@ -20,6 +20,10 @@ let abort        = null;
 let timer        = null;
 let lastTrackKey = '';
 
+document.addEventListener('streamquality', (e) => {
+  qualStreamEl.textContent = `Stream quality: ${e.detail.label}`;
+});
+
 // ── Cover art ─────────────────────────────────────────────────────────────────
 
 coverEl.addEventListener('error', () => {
@@ -107,7 +111,6 @@ function renderMeta(m) {
   qualSrcEl.textContent = m.bit_depth && m.sample_rate
     ? `Source quality: ${m.bit_depth}-bit ${(m.sample_rate / 1000).toFixed(1)} kHz`
     : '';
-  qualStreamEl.textContent = 'Stream quality: FLAC / HiFi Lossless';
 }
 
 // ── Recently played ───────────────────────────────────────────────────────────

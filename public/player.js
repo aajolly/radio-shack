@@ -15,6 +15,17 @@ function pickLosslessLevel(levels) {
   return idx;
 }
 
+function describeLevel(level) {
+  const codec = level?.audioCodec ?? level?.codecSet ?? level?.attrs?.CODECS ?? '';
+  if (/flac|alac/i.test(codec)) return 'FLAC / HiFi Lossless';
+  const kbps = level?.bitrate ? `${Math.round(level.bitrate / 1000)} kbps VBR MP3` : 'MP3';
+  return kbps;
+}
+
+function dispatchQuality(label) {
+  document.dispatchEvent(new CustomEvent('streamquality', { detail: { label } }));
+}
+
 if (window.Hls && Hls.isSupported()) {
   const hls = new Hls();
   hls.loadSource(STREAM_URL);
@@ -28,6 +39,9 @@ if (window.Hls && Hls.isSupported()) {
     } else {
       setStatus(`Ready · ${data.levels[hls.currentLevel]?.audioCodec ?? 'auto'}`);
     }
+  });
+  hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
+    dispatchQuality(describeLevel(hls.levels[data.level]));
   });
   hls.on(Hls.Events.ERROR, (_event, data) => {
     if (!data.fatal) return;
