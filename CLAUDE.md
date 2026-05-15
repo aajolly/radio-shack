@@ -10,11 +10,29 @@ npm start          # css:build then node server.js (one-shot, no reload)
 npm run css:build  # Compile src/input.css → public/style.css (minified)
 npm run css:watch  # Tailwind watch mode only
 npm run db:init    # Drop and recreate DB schema, insert seed stations
+npm test           # Run full test suite once (Vitest)
+npm run test:watch # Vitest in watch mode
+npm run test:coverage # Coverage report via v8
 ```
 
 **Node requirement:** >= 22.5 (uses the built-in `node:sqlite` module). Run `nvm use` if needed — `.nvmrc` pins `lts/*`.
 
 **Assume the server is already running.** Do not start it in the foreground — that blocks. If a restart is truly necessary use `run_in_background: true`, then verify with `curl http://localhost:3000/api/health`.
+
+## Testing
+
+**Runner:** Vitest. Config in `vitest.config.js`.
+
+| File | Environment | What it covers |
+|------|-------------|----------------|
+| `tests/server.ratings.test.js` | node | `getVoterId`, `GET /api/ratings`, `POST /api/ratings` |
+| `tests/ui.ratings.test.js` | jsdom | `applyBtnState`, `renderRatings`, `resetRatingsUI`, all format functions |
+
+Each backend test creates a fresh in-memory SQLite DB (`new DatabaseSync(':memory:')`) and passes it to `createApp(db)` — no shared state between tests, no real `data.db` touched. Set `NODE_ENV=test` to suppress morgan (done automatically by `npm test`).
+
+Frontend tests import directly from `public/ratings-ui.js`, which has no module-level DOM access. DOM elements are constructed inline in each test using `document.createElement`.
+
+**Adding tests:** place new files in `tests/`. Name files `ui.*.test.js` for jsdom; anything else runs in node.
 
 ## Architecture
 
@@ -30,7 +48,11 @@ The frontend is plain HTML + three vanilla JS modules (`player.js`, `metadata.js
 
 ### server.js
 
-Single-file Express app. All SQLite statements are prepared once at startup (after `initSchema`/`seedIfEmpty`) and reused across requests.
+Exports two symbols used by tests:
+- `createApp(db)` — builds and returns the Express app without binding to a port. Prepared statements are created inside this function so each test gets its own isolated set against its own in-memory DB.
+- `getVoterId(req)` — pure function, exported for unit testing.
+
+The `app.listen` call only runs when the file is executed directly (guarded by `process.argv[1]` check). Morgan is suppressed when `NODE_ENV=test`.
 
 **Voter identity** — `getVoterId(req)` returns `SHA-256(VOTER_SALT | ip | user-agent).slice(0, 32)`. Never stored client-side. Set `VOTER_SALT` env var in production; defaults to `'radio-shack-dev'`. Behind a reverse proxy add `app.set('trust proxy', 1)`.
 
@@ -59,7 +81,8 @@ Each file owns a distinct set of element IDs; they do not share references.
 | File | IDs owned | Responsibility |
 |------|-----------|----------------|
 | `player.js` | `#player`, `#np-status` | HLS playback via hls.js; pins to FLAC level; recovers on errors |
-| `metadata.js` | `#np-artist/title/album/year/quality-source/quality-stream`, `#np-cover`, `#np-ratings`, `#btn-up/down`, `#count-up/down`, `#recent` | Polls `metadatav2.json` every 20 s; pauses when tab hidden; fetches/submits ratings |
+| `ratings-ui.js` | — | **Exported pure functions** (no DOM globals): `applyBtnState`, `renderRatings`, `resetRatingsUI`, `formatArtist`, `formatTitle`, `formatAlbum`, `formatSourceQuality`. Imported by `metadata.js` and by the test suite. |
+| `metadata.js` | `#np-artist/title/album/year/quality-source/quality-stream`, `#np-cover`, `#np-ratings`, `#btn-up/down`, `#count-up/down`, `#recent` | Polls `metadatav2.json` every 20 s; pauses when tab hidden; fetches/submits ratings. Imports from `./ratings-ui.js` — script tag must be `type="module"`. |
 | `app.js` | `#stations`, `#add-form` | Station list CRUD |
 
 **Metadata polling** — `track_key = "${artist}|${title}"` is the cache key for cover art (`?v={key}`) and the rating lookup. On track change: cover updates, year badge shows/hides, ratings reset and re-fetch.
