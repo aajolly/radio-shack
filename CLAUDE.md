@@ -13,9 +13,15 @@ npm run db:init    # Drop and recreate DB schema, insert seed stations
 npm test           # Run full test suite once (Vitest)
 npm run test:watch # Vitest in watch mode
 npm run test:coverage # Coverage report via v8
+
+# Docker
+docker compose --profile dev up          # hot-reload dev server (bind-mounted source)
+docker compose --profile prod up --build # production image, SQLite in named volume
 ```
 
 **Node requirement:** >= 22.5 (uses the built-in `node:sqlite` module). Run `nvm use` if needed — `.nvmrc` pins `lts/*`.
+
+**Docker:** `Dockerfile` has four stages — `deps`, `builder`, `dev`, `runner`. The `dev` profile uses `npm run dev:docker` (not `npm run dev`) because Tailwind v4 `--watch` exits immediately inside Docker on Linux bind mounts; `dev:docker` substitutes nodemon-driven one-shot `css:build` calls. The `prod` profile mounts a named volume at `/app/db` for SQLite persistence. Set `VOTER_SALT` env var before deploying to production.
 
 **Assume the server is already running.** Do not start it in the foreground — that blocks. If a restart is truly necessary use `run_in_background: true`, then verify with `curl http://localhost:3000/api/health`.
 
