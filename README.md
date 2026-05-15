@@ -47,6 +47,7 @@ Then open http://localhost:3000.
 | Script | What it does |
 |---|---|
 | `npm run dev` | Tailwind watch + nodemon (concurrent, prefixed output) |
+| `npm run dev:docker` | Same but uses nodemon-driven CSS builds — used by the Docker dev profile |
 | `npm start` | One-shot CSS build then `node server.js` |
 | `npm run css:build` | Compile `src/input.css` → `public/style.css` (minified) |
 | `npm run css:watch` | Tailwind watch only |
@@ -54,6 +55,27 @@ Then open http://localhost:3000.
 | `npm test` | Run full test suite once |
 | `npm run test:watch` | Vitest in watch mode |
 | `npm run test:coverage` | Coverage report via v8 |
+
+## Docker
+
+Two profiles are provided via `docker-compose.yml`:
+
+**Dev** — bind-mounts the repo for live hot-reload. nodemon restarts the server on JS changes; CSS rebuilds when `src/` or `public/` files change.
+
+```bash
+docker compose --profile dev up
+```
+
+**Prod** — lean ~57 MB image (`node:24-alpine`, production deps only). SQLite data is persisted in a named Docker volume (`db_data`) so it survives container restarts and image rebuilds.
+
+```bash
+# Optional: set a secret salt for voter-ID hashing (defaults to a placeholder)
+export VOTER_SALT=your-random-secret
+
+docker compose --profile prod up --build
+```
+
+Then open http://localhost:3000.
 
 ## Project Structure
 
