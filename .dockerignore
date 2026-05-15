@@ -1,0 +1,36 @@
+.git/
+.github/
+node_modules/
+npm-debug.log*
+
+# Runtime DB (created by the container on first start)
+db/data.db
+db/data.db-shm
+db/data.db-wal
+db/data.db-journal
+
+# Generated CSS (rebuilt inside the container by the builder stage)
+public/style.css
+
+# Test / dev tooling not needed in the image
+tests/
+vitest.config.js
+
+# Local config
+.nvmrc
+.env
+.DS_Store
+
+# Docs / design assets
+CLAUDE.md
+README.md
+LICENSE
+RadioCalicoLayout.png
+RadioCalicoLogoTM.png
+RadioCalicoStyle.zip
+RadioShack_Style_Guide.txt
+stream_URL.txt
+
+# Stray build artefacts
+radio-shack@0.1.0
+node

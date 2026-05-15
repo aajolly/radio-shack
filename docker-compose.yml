@@ -1,0 +1,45 @@
+services:
+
+  # ── Dev ─────────────────────────────────────────────────────────────────────
+  # docker compose --profile dev up
+  #
+  # Mounts the repo as a live volume. nodemon restarts the server on .js changes;
+  # Tailwind watch rebuilds style.css on src/ or HTML/JS changes.
+  # The anonymous /app/node_modules volume keeps the container's node_modules
+  # from being overwritten by the host's bind mount.
+  dev:
+    build:
+      context: .
+      target: dev
+    # Tailwind's own --watch exits after first build inside Docker.
+    # dev:docker replaces it with nodemon-driven css:build on src/ changes.
+    command: ["npm", "run", "dev:docker"]
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    profiles: [dev]
+
+  # ── Production ───────────────────────────────────────────────────────────────
+  # docker compose --profile prod up --build
+  #
+  # Lean image: only express + morgan, pre-built CSS, no dev tooling.
+  # SQLite db/data.db lives in the named volume so it survives container restarts.
+  # Set VOTER_SALT in a .env file or shell environment before deploying.
+  app:
+    build:
+      context: .
+      target: runner
+    volumes:
+      - db_data:/app/db
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      VOTER_SALT: ${VOTER_SALT:-change-me-in-production}
+    restart: unless-stopped
+    profiles: [prod]
+
+volumes:
+  db_data:
